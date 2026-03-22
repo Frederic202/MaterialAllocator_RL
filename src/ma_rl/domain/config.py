@@ -6,8 +6,10 @@ from dataclasses import dataclass, field
 @dataclass(slots=True)
 class HardRuleConfig:
     allowed_type_pairs: set[tuple[str, str]] = field(default_factory=set)
+    forbidden_order_categories: set[str] = field(default_factory=lambda: {"Forbidden"})
+
     enforce_dimension_rules: bool = True
-    enforce_single_use_material: bool = True
+    allow_missing_dimensions: bool = True
 
 
 @dataclass(slots=True)
@@ -23,6 +25,12 @@ class ScoreWeights:
     order_completion_bonus: float = 10.0
     homogeneity_penalty: float = 5.0
     unassigned_order_step_penalty: float = 2.0
+
+
+@dataclass(slots=True)
+class FeasibleMatchConfig:
+    rule_set_name: str = "default"
+    include_non_allocatable_debug_matches: bool = False
 
 
 @dataclass(slots=True)

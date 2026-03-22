@@ -10,18 +10,18 @@ class Material:
     material_id: str
     mat_type_code: str
 
-    width: float
-    thickness: float
-    length: float
-    weight: float
+    width: float | None = None
+    thickness: float | None = None
+    length: float | None = None
+    weight: float | None = None
 
-    yard: str
-    production_date: date
-    pile_position: int
+    yard: str | None = None
+    production_date: date | None = None
+    pile_position: int | None = None
 
     category_name: str = "default"
     category_score: float = 0.0
-    homogeneity_class: str = "default"
+    homogeneity_class: str | None = None
 
     assigned: bool = False
 
@@ -32,18 +32,18 @@ class OrderStep:
     order_id: str
     prod_step_type_code: str
 
-    required_width_min: float
-    required_width_max: float
-    required_thickness_min: float
-    required_thickness_max: float
-    required_length_min: float
-    required_length_max: float
+    required_width_min: float | None = None
+    required_width_max: float | None = None
+    required_thickness_min: float | None = None
+    required_thickness_max: float | None = None
+    required_length_min: float | None = None
+    required_length_max: float | None = None
 
-    due_date: date
+    due_date: date | None = None
 
     category_name: str = "default"
     category_score: float = 0.0
-    required_homogeneity_class: Optional[str] = None
+    required_homogeneity_class: str | None = None
 
     assigned: bool = False
 
@@ -55,28 +55,38 @@ class MatchKey:
 
 
 @dataclass(slots=True)
-class Match:
+class FeasibleMatch:
     material_id: str
     order_step_id: str
-    valid: bool
+
+    allocatable: bool = True
+    rule_set_name: str | None = None
+    check_rule_set_names: list[str] = field(default_factory=list)
+    failed_rule_names: list[str] = field(default_factory=list)
+
+    score: float | None = None
 
     assignment_cost: float = 0.0
     due_date_score: float = 0.0
     production_date_score: float = 0.0
     pile_penalty: float = 0.0
+    order_category_score: float = 0.0
+    material_category_score: float = 0.0
 
-    local_score: float = 0.0
+    debug_messages: list[str] = field(default_factory=list)
+
+    @property
+    def key(self) -> MatchKey:
+        return MatchKey(self.material_id, self.order_step_id)
 
 
 @dataclass(slots=True)
 class Assignment:
     material_id: str
     order_step_id: str
-    match_score: float
-    assignment_cost: float
-    due_date_score: float
-    production_date_score: float
-    pile_penalty: float
+
+    score: float
+    source_rule_set_name: str | None = None
 
 
 @dataclass(slots=True)
@@ -98,17 +108,13 @@ class AssignmentSet:
     def assigned_order_step_ids(self) -> set[str]:
         return {a.order_step_id for a in self.assignments}
 
-    @property
-    def assigned_order_ids(self) -> set[str]:
-        # Wird später sinnvoll, wenn wir Completion-Bonus berechnen
-        return set()
-
 
 @dataclass(slots=True)
 class Scenario:
     scenario_id: str
     materials: list[Material]
     order_steps: list[OrderStep]
+    today: date | None = None
 
 
 @dataclass(slots=True)
