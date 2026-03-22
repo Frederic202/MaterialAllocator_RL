@@ -1,25 +1,17 @@
-from __future__ import annotations
-
 from pathlib import Path
 
-from stable_baselines3 import DQN
-from stable_baselines3.common.monitor import Monitor
+import numpy as np
 
 from ma_rl.data import (
     load_material_type_codes,
     load_prod_step_type_codes,
     load_scenario_from_psi_json,
 )
-from ma_rl.domain import (
-    EnvConfig,
-    FeasibleMatchConfig,
-    HardRuleConfig,
-    ScoreWeights,
-)
+from ma_rl.domain import EnvConfig, FeasibleMatchConfig, HardRuleConfig, ScoreWeights
 from ma_rl.envs import MaterialAllocatorEnv
 
 
-def build_env():
+def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
 
     mat_type_sql = project_root / "data" / "raw" / "master_data_mat_type 2.sql"
@@ -34,8 +26,8 @@ def build_env():
         selected_step_types={"HR"},
         valid_material_type_codes=valid_material_type_codes,
         valid_prod_step_type_codes=valid_prod_step_type_codes,
-        max_materials=300,
-        max_order_steps=50,
+        max_materials=200,
+        max_order_steps=30,
         only_productive_materials=True,
     )
 
@@ -58,58 +50,38 @@ def build_env():
             unassigned_order_step_penalty=2.0,
         ),
         feasible_match_config=FeasibleMatchConfig(
-            rule_set_name="psi_dqn_v1",
+            rule_set_name="psi_env_v1",
             include_non_allocatable_debug_matches=False,
         ),
         env_config=EnvConfig(max_steps_per_episode=500),
         penalty_threshold=0.0,
-        invalid_action_penalty=-1.0,
     )
 
-    return Monitor(env)
+    obs, info = env.reset()
 
+    print("=" * 70)
+    print("ENV SMOKE TEST")
+    print("=" * 70)
+    print(f"Materials: {len(scenario.materials)}")
+    print(f"OrderSteps: {len(scenario.order_steps)}")
+    print(f"Initial valid actions: {int(np.sum(obs['action_mask']))}")
 
-def main() -> None:
-    project_root = Path(__file__).resolve().parents[3]
-    model_dir = project_root / "data" / "outputs" / "models"
-    log_dir = project_root / "data" / "outputs" / "tensorboard"
-    model_dir.mkdir(parents=True, exist_ok=True)
-    log_dir.mkdir(parents=True, exist_ok=True)
+    done = False
+    truncated = False
+    cumulative_reward = 0.0
 
-    env = build_env()
+    while not done and not truncated:
+        valid_actions = np.where(env.get_action_mask() > 0.0)[0]
+        if len(valid_actions) == 0:
+            break
 
-    model = DQN(
-        policy="MultiInputPolicy",
-        env=env,
-        learning_rate=1e-4,
-        buffer_size=50_000,
-        learning_starts=1_000,
-        batch_size=64,
-        tau=1.0,
-        gamma=0.99,
-        train_freq=4,
-        gradient_steps=1,
-        target_update_interval=1_000,
-        exploration_fraction=0.30,
-        exploration_initial_eps=1.0,
-        exploration_final_eps=0.05,
-        policy_kwargs=dict(net_arch=[256, 256]),
-        verbose=1,
-        tensorboard_log=str(log_dir),
-        seed=42,
-    )
+        action = int(valid_actions[0])
+        obs, reward, done, truncated, info = env.step(action)
+        cumulative_reward += reward
 
-    model.learn(
-        total_timesteps=50_000,
-        log_interval=10,
-        progress_bar=True,
-        tb_log_name="dqn_material_allocator_v1",
-    )
-
-    model_path = model_dir / "dqn_material_allocator_v1"
-    model.save(str(model_path))
-
-    print(f"Model saved to: {model_path}.zip")
+    print(f"Assignments selected: {info['assignments_selected']}")
+    print(f"Total score: {info['total_score']:.4f}")
+    print(f"Cumulative reward: {cumulative_reward:.4f}")
 
 
 if __name__ == "__main__":

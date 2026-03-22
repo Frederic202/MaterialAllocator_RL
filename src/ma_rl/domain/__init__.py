@@ -15,6 +15,7 @@ from .scoring import (
     apply_assignment_set_score,
 )
 from .type_compatibility import build_default_allowed_type_pairs_for_psi_v1
+from .config import HardRuleConfig, ScoreWeights, FeasibleMatchConfig, EnvConfig, DatasetShapeConfig
 
 __all__ = [
     "Material",
@@ -33,4 +34,5 @@ __all__ = [
     "calculate_assignment_set_score",
     "apply_assignment_set_score",
     "build_default_allowed_type_pairs_for_psi_v1",
+    "DatasetShapeConfig",
 ]

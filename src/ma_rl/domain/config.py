@@ -35,5 +35,15 @@ class FeasibleMatchConfig:
 
 @dataclass(slots=True)
 class EnvConfig:
-    max_steps_per_episode: int = 500
+    max_steps_per_episode: int | None = None
     allow_delay_action: bool = False
+
+    use_dynamic_max_steps: bool = True
+    dynamic_max_steps_factor: int = 2
+    min_steps_per_episode: int = 20
+
+@dataclass(slots=True)
+class DatasetShapeConfig:
+    max_materials: int
+    max_order_steps: int
+    max_actions: int

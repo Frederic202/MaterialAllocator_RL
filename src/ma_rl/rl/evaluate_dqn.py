@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 from stable_baselines3 import DQN
-from stable_baselines3.common.monitor import Monitor
 
 from ma_rl.data import (
     load_material_type_codes,
@@ -66,50 +66,41 @@ def build_env():
         invalid_action_penalty=-1.0,
     )
 
-    return Monitor(env)
+    return env
 
 
 def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
-    model_dir = project_root / "data" / "outputs" / "models"
-    log_dir = project_root / "data" / "outputs" / "tensorboard"
-    model_dir.mkdir(parents=True, exist_ok=True)
-    log_dir.mkdir(parents=True, exist_ok=True)
+    model_path = project_root / "data" / "outputs" / "models" / "dqn_material_allocator_v1.zip"
 
     env = build_env()
+    model = DQN.load(str(model_path))
 
-    model = DQN(
-        policy="MultiInputPolicy",
-        env=env,
-        learning_rate=1e-4,
-        buffer_size=50_000,
-        learning_starts=1_000,
-        batch_size=64,
-        tau=1.0,
-        gamma=0.99,
-        train_freq=4,
-        gradient_steps=1,
-        target_update_interval=1_000,
-        exploration_fraction=0.30,
-        exploration_initial_eps=1.0,
-        exploration_final_eps=0.05,
-        policy_kwargs=dict(net_arch=[256, 256]),
-        verbose=1,
-        tensorboard_log=str(log_dir),
-        seed=42,
-    )
+    obs, info = env.reset()
+    done = False
+    truncated = False
+    cumulative_reward = 0.0
+    invalid_actions = 0
 
-    model.learn(
-        total_timesteps=50_000,
-        log_interval=10,
-        progress_bar=True,
-        tb_log_name="dqn_material_allocator_v1",
-    )
+    while not done and not truncated:
+        action, _state = model.predict(obs, deterministic=True)
+        obs, reward, done, truncated, info = env.step(int(action))
+        cumulative_reward += reward
 
-    model_path = model_dir / "dqn_material_allocator_v1"
-    model.save(str(model_path))
+        if info.get("invalid_action", False):
+            invalid_actions += 1
 
-    print(f"Model saved to: {model_path}.zip")
+    print("=" * 70)
+    print("DQN EVALUATION")
+    print("=" * 70)
+    print(f"Assignments selected: {info['assignments_selected']}")
+    print(f"Total match score: {info['total_match_score']:.4f}")
+    print(f"Total penalty: {info['total_penalty']:.4f}")
+    print(f"Total bonus: {info['total_bonus']:.4f}")
+    print(f"Final total score: {info['total_score']:.4f}")
+    print(f"Cumulative reward: {cumulative_reward:.4f}")
+    print(f"Invalid actions: {invalid_actions}")
+    print(f"Remaining valid actions: {int(np.sum(info['action_mask']))}")
 
 
 if __name__ == "__main__":

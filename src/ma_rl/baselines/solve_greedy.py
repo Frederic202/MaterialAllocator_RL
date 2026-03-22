@@ -17,7 +17,7 @@ class SolveGreedyResult:
 
 def solve_greedy(
     feasible_matches: list[FeasibleMatch],
-    penalty_threshold: float = 0.0,
+    penalty_threshold: float | None = None,
 ) -> SolveGreedyResult:
     """
     1. nur allocatable matches berücksichtigen
@@ -32,7 +32,10 @@ def solve_greedy(
         for match in feasible_matches
         if match.allocatable
         and match.score is not None
-        and match.score >= penalty_threshold
+        and (
+            penalty_threshold is None
+            or match.score >= penalty_threshold
+        )
     ]
 
     candidates.sort(key=lambda match: match.score, reverse=True)
