@@ -6,7 +6,7 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from stable_baselines3 import DQN
+from sb3_contrib import QRDQN
 from stable_baselines3.common.monitor import Monitor
 
 from ma_rl.analysis import write_excel_friendly_csv, write_simple_xlsx
@@ -51,7 +51,7 @@ def build_common_configs():
     )
 
     feasible_match_config = FeasibleMatchConfig(
-        rule_set_name="dqn_multiscenario_v2",
+        rule_set_name="qrdqn_multiscenario_v1",
         include_non_allocatable_debug_matches=False,
     )
 
@@ -67,25 +67,25 @@ def build_common_configs():
 
 
 def plot_multiseed_test_scores(rows: list[dict], path: Path) -> None:
-    dqn_rows = [row for row in rows if row["algorithm"] == "dqn"]
+    qrdqn_rows = [row for row in rows if row["algorithm"] == "qrdqn"]
     greedy_rows = [row for row in rows if row["algorithm"] == "greedy"]
 
-    dqn_by_seed: dict[int, list[float]] = {}
-    for row in dqn_rows:
-        dqn_by_seed.setdefault(int(row["seed"]), []).append(float(row["total_score"]))
+    qrdqn_by_seed: dict[int, list[float]] = {}
+    for row in qrdqn_rows:
+        qrdqn_by_seed.setdefault(int(row["seed"]), []).append(float(row["total_score"]))
 
     greedy_scores = [float(row["total_score"]) for row in greedy_rows]
     greedy_mean = sum(greedy_scores) / len(greedy_scores)
 
-    seeds = sorted(dqn_by_seed.keys())
-    dqn_means = [sum(dqn_by_seed[s]) / len(dqn_by_seed[s]) for s in seeds]
+    seeds = sorted(qrdqn_by_seed.keys())
+    dqn_means = [sum(qrdqn_by_seed[s]) / len(qrdqn_by_seed[s]) for s in seeds]
 
     plt.figure(figsize=(8, 4.5))
-    plt.plot(seeds, dqn_means, marker="o", label="DQN mean test score")
+    plt.plot(seeds, dqn_means, marker="o", label="QRDQN mean test score")
     plt.axhline(greedy_mean, linestyle="--", label="Greedy mean test score")
     plt.xlabel("Seed")
     plt.ylabel("Mean Total Score on Test Set")
-    plt.title("Multi-Seed DQN vs. Greedy")
+    plt.title("Multi-Seed QRDQN vs. Greedy")
     plt.xticks(seeds)
     plt.legend()
     plt.tight_layout()
@@ -99,7 +99,7 @@ def main() -> None:
 
     train_dir = project_root / "data" / "scenarios" / DATASET_NAME / "train"
     val_dir = project_root / "data" / "scenarios" / DATASET_NAME / "val"
-    test_dir = project_root / "data" / "scenarios" / DATASET_NAME/ "test"
+    test_dir = project_root / "data" / "scenarios" / DATASET_NAME / "test"
 
     output_root = project_root / "data" / "outputs" / "multiseed_benchmark"
     output_root.mkdir(parents=True, exist_ok=True)
@@ -166,7 +166,7 @@ def main() -> None:
             penalty_threshold=None,
         )
 
-        model = DQN(
+        model = QRDQN(
             policy="MultiInputPolicy",
             env=train_env,
             learning_rate=1e-4,
@@ -181,7 +181,10 @@ def main() -> None:
             exploration_fraction=0.30,
             exploration_initial_eps=1.0,
             exploration_final_eps=0.05,
-            policy_kwargs=dict(net_arch=[256, 256]),
+            policy_kwargs=dict(
+                n_quantiles=50,
+                net_arch=[256, 256],
+            ),
             verbose=1,
             tensorboard_log=str(output_root / "tensorboard"),
             seed=seed,
@@ -199,9 +202,9 @@ def main() -> None:
         model.save(str(final_model_path))
 
         best_model_path = seed_output_dir / "best_model.zip"
-        eval_model = DQN.load(str(best_model_path if best_model_path.exists() else final_model_path.with_suffix(".zip")))
+        eval_model = QRDQN.load(str(best_model_path if best_model_path.exists() else final_model_path.with_suffix(".zip")))
 
-        dqn_rows = evaluate_model_on_scenarios(
+        qrdqn_rows = evaluate_model_on_scenarios(
             model=eval_model,
             scenarios=test_scenarios,
             shape_config=shape_config,
@@ -212,13 +215,13 @@ def main() -> None:
             penalty_threshold=None,
         )
 
-        for row in dqn_rows:
-            row["algorithm"] = "dqn"
+        for row in qrdqn_rows:
+            row["algorithm"] = "qrdqn"
             row["seed"] = seed
             all_test_rows.append(row)
 
     summary_rows = []
-    for algorithm in ["greedy", "dqn"]:
+    for algorithm in ["greedy", "qrdqn"]:
         algo_rows = [row for row in all_test_rows if row["algorithm"] == algorithm]
 
         if algorithm == "greedy":

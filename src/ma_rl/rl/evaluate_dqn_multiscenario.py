@@ -54,13 +54,14 @@ def build_common_configs():
 
     return hard_rule_config, score_weights, feasible_match_config, env_config
 
+DATASET_NAME = "generated_v2"
 
 def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
 
-    train_dir = project_root / "data" / "scenarios" / "generated" / "train"
-    val_dir = project_root / "data" / "scenarios" / "generated" / "val"
-    test_dir = project_root / "data" / "scenarios" / "generated" / "test"
+    train_dir = project_root / "data" / "scenarios" / DATASET_NAME / "train"
+    val_dir = project_root / "data" / "scenarios" / DATASET_NAME / "val"
+    test_dir = project_root / "data" / "scenarios" / DATASET_NAME / "test"
 
     output_dir = project_root / "data" / "outputs" / "testset_eval"
     output_dir.mkdir(parents=True, exist_ok=True)

@@ -15,10 +15,11 @@ from ma_rl.domain import (
 from ma_rl.matching import generate_feasible_matches
 from ma_rl.analysis import write_excel_friendly_csv, write_simple_xlsx
 
+DATASET_NAME = "generated_v2"
 
 def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
-    test_dir = project_root / "data" / "scenarios" / "generated" / "test"
+    test_dir = project_root / "data" / "scenarios" / DATASET_NAME / "test"
     output_dir = project_root / "data" / "outputs" / "testset_eval"
     output_dir.mkdir(parents=True, exist_ok=True)
 

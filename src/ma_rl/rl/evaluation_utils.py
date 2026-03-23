@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from statistics import mean
 
+from sb3_contrib import QRDQN
 from stable_baselines3 import DQN
 
 from ma_rl.baselines import solve_greedy
@@ -20,7 +21,7 @@ from ma_rl.rl.masked_action_selection import select_masked_greedy_action
 
 
 def evaluate_model_on_scenarios(
-    model: DQN,
+    model: DQN | QRDQN,
     scenarios: list[Scenario],
     shape_config: DatasetShapeConfig,
     hard_rule_config: HardRuleConfig,

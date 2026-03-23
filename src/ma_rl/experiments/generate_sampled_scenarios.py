@@ -14,6 +14,15 @@ from ma_rl.domain import FeasibleMatchConfig, HardRuleConfig, ScoreWeights
 from ma_rl.matching import generate_feasible_matches
 
 
+DATASET_NAME = "generated_v2"
+
+SPLITS = {
+    "train": 35,
+    "val": 10,
+    "test": 15,
+}
+
+
 def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
 
@@ -53,7 +62,7 @@ def main() -> None:
     )
 
     feasible_match_config = FeasibleMatchConfig(
-        rule_set_name="psi_sampling_v1",
+        rule_set_name="psi_sampling_v2",
         include_non_allocatable_debug_matches=False,
     )
 
@@ -64,21 +73,18 @@ def main() -> None:
         feasible_match_config=feasible_match_config,
     )
 
-    output_root = project_root / "data" / "scenarios" / "generated"
-    splits = {
-        "train": 20,
-        "val": 5,
-        "test": 5,
-    }
+    output_root = project_root / "data" / "scenarios" / DATASET_NAME
+    output_root.mkdir(parents=True, exist_ok=True)
 
+    existing_scenarios_all = []
     base_seed = 42
 
-    for split_name, count in splits.items():
+    for split_name, count in SPLITS.items():
         split_dir = output_root / split_name
         split_dir.mkdir(parents=True, exist_ok=True)
 
         for i in range(count):
-            rng = random.Random(base_seed + i + hash(split_name) % 10_000)
+            rng = random.Random(base_seed + i + (hash(split_name) % 10_000))
 
             scenario = sample_subscenario_from_feasible_matches(
                 full_scenario=full_scenario,
@@ -88,7 +94,13 @@ def main() -> None:
                 target_order_steps=8,
                 min_matches_per_step=2,
                 max_matches_per_step=4,
-                extra_distractor_materials=4,
+                extra_distractor_materials=6,
+                existing_scenarios=existing_scenarios_all,
+                max_step_overlap_ratio=0.5,
+                max_material_overlap_ratio=0.5,
+                min_unique_assignable_order_steps=8,
+                penalty_threshold=None,
+                max_attempts=500,
             )
 
             write_scenario_to_json(
@@ -96,7 +108,10 @@ def main() -> None:
                 path=split_dir / f"{scenario.scenario_id}.json",
             )
 
+            existing_scenarios_all.append(scenario)
+
     print("Scenario generation finished.")
+    print(f"Dataset name:  {DATASET_NAME}")
     print(f"Output folder: {output_root}")
 
 

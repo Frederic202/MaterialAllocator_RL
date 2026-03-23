@@ -195,7 +195,7 @@ def print_terminal_summary(rows: list[dict]) -> None:
 
 def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
-    generated_root = project_root / "data" / "scenarios" / "generated"
+    generated_root = project_root / "data" / "scenarios" / "generated_v2"
     output_root = project_root / "data" / "outputs" / "scenario_analysis"
 
     hard_rule_config, score_weights, feasible_match_config = build_common_configs()

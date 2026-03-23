@@ -2,15 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from stable_baselines3 import DQN
+from sb3_contrib import QRDQN
 from stable_baselines3.common.monitor import Monitor
 
-from ma_rl.data import (
-    compute_dataset_shape_config,
-    load_scenarios_from_folder,
-)
+from ma_rl.data import compute_dataset_shape_config, load_scenarios_from_folder
 from ma_rl.domain import (
-    DatasetShapeConfig,
     EnvConfig,
     FeasibleMatchConfig,
     HardRuleConfig,
@@ -18,8 +14,6 @@ from ma_rl.domain import (
 )
 from ma_rl.envs import MultiScenarioMaterialAllocatorEnv
 
-
-DATASET_NAME = "generated_v2"
 
 def build_common_configs():
     hard_rule_config = HardRuleConfig(
@@ -41,18 +35,26 @@ def build_common_configs():
     )
 
     feasible_match_config = FeasibleMatchConfig(
-        rule_set_name="dqn_multiscenario_v1",
+        rule_set_name="qrdqn_multiscenario_v1",
         include_non_allocatable_debug_matches=False,
     )
 
-    env_config = EnvConfig(max_steps_per_episode=500)
+    env_config = EnvConfig(
+        max_steps_per_episode=None,
+        allow_delay_action=False,
+        use_dynamic_max_steps=True,
+        dynamic_max_steps_factor=2,
+        min_steps_per_episode=20,
+    )
 
     return hard_rule_config, score_weights, feasible_match_config, env_config
 
 
+DATASET_NAME = "generated_v2"
+
 def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
-    train_dir = project_root / "data" / "scenarios" / DATASET_NAME / "train"
+    train_dir = project_root / "data" / "scenarios" / DATASET_NAME/ "train"
     val_dir = project_root / "data" / "scenarios" / DATASET_NAME / "val"
     output_model_dir = project_root / "data" / "outputs" / "models"
     output_tb_dir = project_root / "data" / "outputs" / "tensorboard"
@@ -63,12 +65,10 @@ def main() -> None:
     train_scenarios = load_scenarios_from_folder(train_dir)
     val_scenarios = load_scenarios_from_folder(val_dir)
 
-    all_scenarios_for_shapes = train_scenarios + val_scenarios
-
     hard_rule_config, score_weights, feasible_match_config, env_config = build_common_configs()
 
     shape_config = compute_dataset_shape_config(
-        scenarios=all_scenarios_for_shapes,
+        scenarios=train_scenarios + val_scenarios,
         hard_rule_config=hard_rule_config,
         score_weights=score_weights,
         feasible_match_config=feasible_match_config,
@@ -86,10 +86,9 @@ def main() -> None:
         invalid_action_penalty=-1.0,
         scenario_seed=42,
     )
-
     env = Monitor(env)
 
-    model = DQN(
+    model = QRDQN(
         policy="MultiInputPolicy",
         env=env,
         learning_rate=1e-4,
@@ -104,7 +103,10 @@ def main() -> None:
         exploration_fraction=0.30,
         exploration_initial_eps=1.0,
         exploration_final_eps=0.05,
-        policy_kwargs=dict(net_arch=[256, 256]),
+        policy_kwargs=dict(
+            n_quantiles=50,
+            net_arch=[256, 256],
+        ),
         verbose=1,
         tensorboard_log=str(output_tb_dir),
         seed=42,
@@ -114,10 +116,10 @@ def main() -> None:
         total_timesteps=100_000,
         log_interval=10,
         progress_bar=True,
-        tb_log_name="dqn_multiscenario_v1",
+        tb_log_name="qrdqn_multiscenario_v1",
     )
 
-    model_path = output_model_dir / "dqn_multiscenario_v1"
+    model_path = output_model_dir / "qrdqn_multiscenario_v1"
     model.save(str(model_path))
     print(f"Saved model: {model_path}.zip")
 
