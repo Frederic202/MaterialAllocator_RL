@@ -74,9 +74,7 @@ def main() -> None:
     x = list(range(len(scenario_ids)))
     width = 0.25
 
-    # ---------------------------------------------------------
     # Plot 1: Total Score pro Szenario
-    # ---------------------------------------------------------
     plt.figure(figsize=(11, 5.5))
     plt.bar([i - width for i in x], greedy_scores, width=width, label="Greedy")
     plt.bar(x, dqn_scores, width=width, label="DQN")
@@ -90,9 +88,7 @@ def main() -> None:
     plt.savefig(score_plot_path, dpi=150)
     plt.close()
 
-    # ---------------------------------------------------------
     # Plot 2: Assignments pro Szenario
-    # ---------------------------------------------------------
     plt.figure(figsize=(11, 5.5))
     plt.bar([i - width for i in x], greedy_assignments, width=width, label="Greedy")
     plt.bar(x, dqn_assignments, width=width, label="DQN")
@@ -106,9 +102,7 @@ def main() -> None:
     plt.savefig(assignments_plot_path, dpi=150)
     plt.close()
 
-    # ---------------------------------------------------------
     # Plot 3: Mittelwert Total Score
-    # ---------------------------------------------------------
     mean_scores = [
         mean(greedy_scores),
         mean(dqn_scores),
@@ -125,9 +119,7 @@ def main() -> None:
     plt.savefig(mean_score_plot_path, dpi=150)
     plt.close()
 
-    # ---------------------------------------------------------
     # Plot 4: Mittelwert Assignments
-    # ---------------------------------------------------------
     mean_assignments = [
         mean([float(v) for v in greedy_assignments]),
         mean([float(v) for v in dqn_assignments]),

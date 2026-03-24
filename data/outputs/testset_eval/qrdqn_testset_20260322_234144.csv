@@ -1,0 +1,6 @@
+﻿scenario_id;num_materials;num_order_steps;num_actions;episode_step_limit;assignments_selected;total_match_score;total_penalty;total_bonus;total_score;cumulative_reward;invalid_actions;final_valid_actions;terminated;truncated;invalid_action_ratio
+test_000;13;8;23;20;8;-1.4666666666666666;0.0;80.0;78.53333333333333;94.53333333333333;0;0;True;False;0.0
+test_001;18;8;23;20;7;-3.583333333333333;2.0;70.0;64.41666666666667;80.41666666666667;0;0;True;False;0.0
+test_002;21;8;23;20;8;-3.0;0.0;80.0;77.0;93.00000000000001;0;0;True;False;0.0
+test_003;15;8;22;20;8;-2.5333333333333337;0.0;80.0;77.46666666666667;93.46666666666667;0;0;True;False;0.0
+test_004;15;8;23;20;8;-4.1000000000000005;0.0;80.0;75.9;91.9;0;0;True;False;0.0

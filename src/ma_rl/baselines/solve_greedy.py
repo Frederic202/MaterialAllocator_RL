@@ -19,13 +19,6 @@ def solve_greedy(
     feasible_matches: list[FeasibleMatch],
     penalty_threshold: float | None = None,
 ) -> SolveGreedyResult:
-    """
-    1. nur allocatable matches berücksichtigen
-    2. score darf nicht None sein
-    3. score muss >= penalty_threshold sein
-    4. nach score absteigend sortieren
-    5. ein Match nur übernehmen, wenn Material und OrderStep noch nicht vergeben sind
-    """
 
     candidates = [
         match

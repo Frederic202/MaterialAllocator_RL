@@ -1,0 +1,11 @@
+algorithm,seed,scenario_id,assignments_selected,total_match_score,total_penalty,total_bonus,total_score,cumulative_reward,invalid_actions,remaining_valid_actions,training_timesteps,note
+greedy,1,psi_combined_scenario_v1,7,0.8999999999999998,86.0,70.0,-15.099999999999994,-15.099999999999994,0,0,0,baseline repeated per seed for easier comparison
+dqn,1,psi_combined_scenario_v1,7,0.8999999999999998,86.0,70.0,-15.099999999999994,84.9,0,0,50000,runtime_seconds=33.10; model=dqn_seed_1.zip
+greedy,2,psi_combined_scenario_v1,7,0.8999999999999998,86.0,70.0,-15.099999999999994,-15.099999999999994,0,0,0,baseline repeated per seed for easier comparison
+dqn,2,psi_combined_scenario_v1,7,0.8999999999999998,86.0,70.0,-15.099999999999994,84.9,0,0,50000,runtime_seconds=33.19; model=dqn_seed_2.zip
+greedy,3,psi_combined_scenario_v1,7,0.8999999999999998,86.0,70.0,-15.099999999999994,-15.099999999999994,0,0,0,baseline repeated per seed for easier comparison
+dqn,3,psi_combined_scenario_v1,7,0.8999999999999998,86.0,70.0,-15.099999999999994,84.9,0,0,50000,runtime_seconds=33.05; model=dqn_seed_3.zip
+greedy,4,psi_combined_scenario_v1,7,0.8999999999999998,86.0,70.0,-15.099999999999994,-15.099999999999994,0,0,0,baseline repeated per seed for easier comparison
+dqn,4,psi_combined_scenario_v1,7,0.7333333333333332,86.0,70.0,-15.266666666666666,84.73333333333333,0,0,50000,runtime_seconds=33.09; model=dqn_seed_4.zip
+greedy,5,psi_combined_scenario_v1,7,0.8999999999999998,86.0,70.0,-15.099999999999994,-15.099999999999994,0,0,0,baseline repeated per seed for easier comparison
+dqn,5,psi_combined_scenario_v1,7,0.7333333333333332,86.0,70.0,-15.266666666666666,84.73333333333333,0,0,50000,runtime_seconds=32.90; model=dqn_seed_5.zip
